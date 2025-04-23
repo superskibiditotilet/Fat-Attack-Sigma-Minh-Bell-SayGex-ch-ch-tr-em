@@ -1,0 +1,52 @@
+getgenv().FastAttack = true
+
+local WeaponDelay = 0.24
+
+local function playActivationSound()
+    local sound = Instance.new("Sound")sound.SoundId="http://www.roblox.com/asset/?id=128428750687426"
+    sound.Volume = 3
+    sound.PlayOnRemove = true
+    sound.Parent = game:GetService("SoundService")
+    sound:Destroy()
+end
+
+if getgenv().FastAttack then
+    playActivationSound()
+end
+
+local function validTool(tool)
+    return tool and tool:IsA("Tool") and tool:FindFirstChild("Handle")
+end
+
+spawn(function()
+    while getgenv().FastAttack do
+        local player = game.Players.LocalPlayer
+        local char = player.Character
+        if not char or not char:FindFirstChild("Humanoid") then
+            task.wait()
+            continue
+        end
+
+        local tool = char:FindFirstChildOfClass("Tool")
+
+        if validTool(tool) then
+            local animPlaying = false
+            for _, track in pairs(char.Humanoid:GetPlayingAnimationTracks()) do
+                if string.find(track.Animation.AnimationId, "Combat") or string.find(track.Name, "Attack") then
+                    animPlaying = true
+                    break
+                end
+            end
+
+            if not animPlaying then
+                local args = {
+                    [1] = "Combat",
+                    [2] = "Attack",
+                    [3] = tool
+                }
+                game:GetService("ReplicatedStorage").Remotes.Combat:FireServer(unpack(args))
+            end
+        end
+        task.wait(WeaponDelay)
+    end
+end)
